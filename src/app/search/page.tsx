@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 // SVG icons
 const SearchIcon = () => (
@@ -41,7 +42,7 @@ const allListings = [
   },
 ];
 
-export default function SearchResults() {
+function SearchResultsContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
 
@@ -54,55 +55,63 @@ export default function SearchResults() {
   });
 
   return (
+    <section className="bg-gradient-to-br from-brand/10 via-white to-accent/5 py-12 mb-8">
+      <div className="container-custom">
+        <div className="flex items-center gap-4 mb-8">
+          <SearchIcon />
+          <h1 className="text-3xl font-bold text-brand">
+            Résultats de recherche pour "{query}"
+          </h1>
+        </div>
+        
+        {filteredListings.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredListings.map((listing) => (
+              <Link 
+                href={`/${listing.category.toLowerCase()}/${listing.id}`}
+                key={listing.id}
+                className="card hover:shadow-xl transition-shadow animate-fade-in"
+              >
+                <h3 className="text-xl font-semibold mb-2 text-brand">{listing.title}</h3>
+                <div className="text-sm text-muted mb-2 font-medium">{listing.category}</div>
+                {listing.price && (
+                  <div className="text-lg font-bold text-accent mb-2">{listing.price}</div>
+                )}
+                {listing.type && (
+                  <div className="text-sm text-muted mb-2">Type: {listing.type}</div>
+                )}
+                {listing.location && (
+                  <div className="text-sm text-muted mb-2">{listing.location}</div>
+                )}
+                <div className="text-xs text-muted">Ajouté le {listing.date}</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 animate-fade-in">
+            <SearchIcon />
+            <h2 className="text-2xl font-semibold mb-2 mt-6 text-brand">Aucun résultat trouvé</h2>
+            <p className="text-muted mb-6">
+              Essayez d'autres termes de recherche ou parcourez nos catégories.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link href="/" className="btn-primary">Retour à l'accueil</Link>
+              <Link href="/ajouter-annonce" className="btn-secondary">Ajouter une annonce</Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export default function SearchResults() {
+  return (
     <main>
       <Navigation />
-      <section className="bg-gradient-to-br from-brand/10 via-white to-accent/5 py-12 mb-8">
-        <div className="container-custom">
-          <div className="flex items-center gap-4 mb-8">
-            <SearchIcon />
-            <h1 className="text-3xl font-bold text-brand">
-              Résultats de recherche pour "{query}"
-            </h1>
-          </div>
-          
-          {filteredListings.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredListings.map((listing) => (
-                <Link 
-                  href={`/${listing.category.toLowerCase()}/${listing.id}`}
-                  key={listing.id}
-                  className="card hover:shadow-xl transition-shadow animate-fade-in"
-                >
-                  <h3 className="text-xl font-semibold mb-2 text-brand">{listing.title}</h3>
-                  <div className="text-sm text-muted mb-2 font-medium">{listing.category}</div>
-                  {listing.price && (
-                    <div className="text-lg font-bold text-accent mb-2">{listing.price}</div>
-                  )}
-                  {listing.type && (
-                    <div className="text-sm text-muted mb-2">Type: {listing.type}</div>
-                  )}
-                  {listing.location && (
-                    <div className="text-sm text-muted mb-2">{listing.location}</div>
-                  )}
-                  <div className="text-xs text-muted">Ajouté le {listing.date}</div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 animate-fade-in">
-              <SearchIcon />
-              <h2 className="text-2xl font-semibold mb-2 mt-6 text-brand">Aucun résultat trouvé</h2>
-              <p className="text-muted mb-6">
-                Essayez d'autres termes de recherche ou parcourez nos catégories.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Link href="/" className="btn-primary">Retour à l'accueil</Link>
-                <Link href="/ajouter-annonce" className="btn-secondary">Ajouter une annonce</Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      <Suspense fallback={<div className="text-center py-16">Chargement des résultats...</div>}>
+        <SearchResultsContent />
+      </Suspense>
     </main>
   );
 } 
